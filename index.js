@@ -11,9 +11,14 @@ const bcrypt = require('bcrypt-nodejs');
 
 // LLamando a los controladores
 const home = require('./controllers/Home');
-const agregarProducto = require('./controllers/AgregarProducto');
 const borrarProducto = require('./controllers/BorrarProducto');
+const modificarProducto = require('./controllers/ModificarProducto');
 
+
+
+// Llamando a Uploads y Cloudinary
+const upload = require('./controllers/ImageUploader/multer');
+const cloudinary = require('./controllers/ImageUploader/Cloudinary');
 
 // Creando conexion a la base de datos
 const db = knex({
@@ -41,10 +46,103 @@ app.get('/', (req, res) => {res.json('estoy vivo!')});
 app.get('/home', (req, res) => { home.handleHome(req, res, db) });
 
 //Agregar Producto
-app.post('/agregar-producto', (req, res) => {agregarProducto.handleAgregarProducto(req, res, db)});
+app.use('/agregar-producto', upload.array('image'), async(req, res) => {
+  const uploader = async (path) => await cloudinary.uploads(path, 'Dimedisa');
+
+  const { 
+    categoria, nombre, descripcion,
+    precio, disponibilidad 
+      } = req.body;
+
+  if (req.method === 'POST') {
+      const urls = [];
+      const files = req.files;
+
+      for(const file of files) {
+          const { path } = file;
+
+          const newPath = await uploader(path);
+
+          urls.push(newPath);
+
+          fs.unlinkSync(path);
+      
+          };
+
+ 
+             db('productos').insert({
+              categoria,             
+              nombre,
+              descripcion,
+              precio,
+              disponibilidad,
+              imagen: urls[0].url    
+           }).then(res.status(200).json('producto agregado'))
+             // id: urls[0].id
+        } else {
+      res.status(405).json({
+          err: "No se pudo subir la imagen"
+      })
+  }
+})
+
 
 // Borrar Perfil
-app.delete('/borrar-perfil/:id', (req, res) => {borrarProducto.handleBorrarProducto(req, res, db)});
+app.delete('/borrar-producto/:id', (req, res) => {borrarProducto.handleBorrarProducto(req, res, db)});
+
+//Modificar Perfil
+app.patch('/modificar-producto/:id', (req, res) => {modificarProducto.handleModificarProducto(req, res, db)});
+
+
+// Imagen de producto
+app.use('/imagen-producto/:id', upload.array('image'), async(req, res) => {
+  const uploader = async (path) => await cloudinary.uploads(path, 'Dimedisa');
+  const { id } = req.params;
+  if (req.method === 'PATCH') {
+      const urls = [];
+      const files = req.files;
+
+      for(const file of files) {
+          const { path } = file;
+
+          const newPath = await uploader(path);
+
+          urls.push(newPath);
+
+          fs.unlinkSync(path);
+      
+          };
+
+          const singleUrls = [];
+          for(let i of urls){
+            singleUrls.push(i.url)
+          }
+
+         singleUrls.toString();
+
+
+            db('productos').where({id: id}).update({             
+              imagen: singleUrls
+             // id: urls[0].id
+
+          })
+             .then(console.log)
+  
+    
+              
+          
+      res.status(200).json('exito');
+  } else {
+      res.status(405).json({
+          err: "No se pudo subir la imagen"
+      })
+  }
+  
+})
+
+//Borrar Imagen de producto
+
+
 
 
 const port = process.env.PORT || 3000;
