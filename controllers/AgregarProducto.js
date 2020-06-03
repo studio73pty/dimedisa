@@ -1,6 +1,6 @@
 const handleAgregarProducto = (req, res, db) =>{
      const { categoria, nombre, descripcion,
-              precio, disponibilidad, imagen } = req.body;
+              precio, disponibilidad, modouso } = req.body;
    
                db('productos').insert({
                 categoria,             
@@ -8,7 +8,7 @@ const handleAgregarProducto = (req, res, db) =>{
                 descripcion,
                 precio,
                 disponibilidad,
-                imagen,    
+                modouso    
              }).then(res.status(200).json('producto agregado'))
           
          

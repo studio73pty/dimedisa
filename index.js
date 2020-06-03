@@ -13,6 +13,9 @@ const bcrypt = require('bcrypt-nodejs');
 const home = require('./controllers/Home');
 const borrarProducto = require('./controllers/BorrarProducto');
 const modificarProducto = require('./controllers/ModificarProducto');
+const agregarProducto = require('./controllers/AgregarProducto');
+const registro = require('./controllers/Registro');
+const inicioSesion = require('./controllers/IniciarSesion');
 
 
 
@@ -45,13 +48,22 @@ app.get('/', (req, res) => {res.json('estoy vivo!')});
 //Obtener todos los productos
 app.get('/home', (req, res) => { home.handleHome(req, res, db) });
 
+//Registro
+app.post('/registro', (req, res) =>  { registro.handleRegistro(req, res, db, bcrypt) });
+
+//Iniciar Sesion
+app.post('/iniciar-sesion', (req, res) =>  { inicioSesion.handleInicioSesion(req, res, db, bcrypt) });
+
 //Agregar Producto
+//app.post('/agregar-producto', (req, res) => { agregarProducto.handleAgregarProducto(req, res, db) });
+
+
 app.use('/agregar-producto', upload.array('image'), async(req, res) => {
   const uploader = async (path) => await cloudinary.uploads(path, 'Dimedisa');
 
   const { 
     categoria, nombre, descripcion,
-    precio, disponibilidad 
+    precio, disponibilidad, modouso 
       } = req.body;
 
   if (req.method === 'POST') {
@@ -76,6 +88,7 @@ app.use('/agregar-producto', upload.array('image'), async(req, res) => {
               descripcion,
               precio,
               disponibilidad,
+              modouso,    
               imagen: urls[0].url    
            }).then(res.status(200).json('producto agregado'))
              // id: urls[0].id
