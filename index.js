@@ -16,7 +16,8 @@ const modificarProducto = require('./controllers/ModificarProducto');
 const agregarProducto = require('./controllers/AgregarProducto');
 const registro = require('./controllers/Registro');
 const inicioSesion = require('./controllers/IniciarSesion');
-
+const buscarProducto = require('./controllers/BuscarProducto');
+const buscarCategoria = require('./controllers/BuscarCategoria');
 
 
 // Llamando a Uploads y Cloudinary
@@ -47,6 +48,12 @@ app.get('/', (req, res) => {res.json('estoy vivo!')});
 
 //Obtener todos los productos
 app.get('/home', (req, res) => { home.handleHome(req, res, db) });
+
+//Buscar producto
+app.get('/buscar-producto/:id', (req, res) => {buscarProducto.handleBuscarProducto(req, res, db)});
+
+//Buscar productos por categoria
+app.post('/buscar-productos-categoria', (req, res) => {buscarCategoria.handleBuscarCategoria(req, res, db)})
 
 //Registro
 app.post('/registro', (req, res) =>  { registro.handleRegistro(req, res, db, bcrypt) });
