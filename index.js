@@ -41,6 +41,7 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
   
 //Inicio de endpoints
 
@@ -67,6 +68,10 @@ app.post('/iniciar-sesion', (req, res) =>  { inicioSesion.handleInicioSesion(req
 
 app.use('/agregar-producto', upload.array('image'), async(req, res) => {
   const uploader = async (path) => await cloudinary.uploads(path, 'Dimedisa');
+  let safeUrl = '';
+  const insert = (str, index, value) => {
+    safeUrl = str.substr(0, index) + value + str.substr(index);
+}
 
   const { 
     categoria, nombre, descripcion,
@@ -88,7 +93,9 @@ app.use('/agregar-producto', upload.array('image'), async(req, res) => {
       
           };
 
- 
+          const unsafeUrl = urls[0].url;
+          insert(unsafeUrl, 4, 's');
+
              db('productos').insert({
               categoria,             
               nombre,
@@ -96,7 +103,7 @@ app.use('/agregar-producto', upload.array('image'), async(req, res) => {
               precio,
               disponibilidad,
               modouso,    
-              imagen: urls[0].url    
+              imagen: safeUrl   
            }).then(res.status(200).json('producto agregado'))
              // id: urls[0].id
         } else {
@@ -117,6 +124,10 @@ app.patch('/modificar-producto/:id', (req, res) => {modificarProducto.handleModi
 // Imagen de producto
 app.use('/imagen-producto/:id', upload.array('image'), async(req, res) => {
   const uploader = async (path) => await cloudinary.uploads(path, 'Dimedisa');
+  let safeUrl = '';
+  const insert = (str, index, value) => {
+    safeUrl = str.substr(0, index) + value + str.substr(index);
+}
   const { id } = req.params;
   if (req.method === 'PATCH') {
       const urls = [];
@@ -132,24 +143,15 @@ app.use('/imagen-producto/:id', upload.array('image'), async(req, res) => {
           fs.unlinkSync(path);
       
           };
-
-          const singleUrls = [];
-          for(let i of urls){
-            singleUrls.push(i.url)
-          }
-
-         singleUrls.toString();
-
+          const unsafeUrl = urls[0].url;
+          insert(unsafeUrl, 4, 's');
 
             db('productos').where({id: id}).update({             
-              imagen: singleUrls
+              imagen: safeUrl
              // id: urls[0].id
 
           })
-             .then(console.log)
-  
-    
-              
+             .then(console.log)           
           
       res.status(200).json('exito');
   } else {
