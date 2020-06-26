@@ -11,7 +11,7 @@ const handleAgregarProducto = (req, res, db) =>{
                 modouso    
              }).then(res.status(200).json('producto agregado'))
           
-         
+             .catch(err => res.status(400).json('error agregando producto + ' + err))
          
          }
  module.exports = {

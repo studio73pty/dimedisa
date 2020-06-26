@@ -3,7 +3,7 @@ const handleHome = (req, res, db) => {
     .then(response => {
         res.json(response);
     })
-
+.catch(err => res.status(500).json('problema con la base de datos + ' + err))
 }
 
 module.exports = {
