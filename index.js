@@ -19,7 +19,7 @@ const inicioSesion = require('./controllers/IniciarSesion');
 const buscarProducto = require('./controllers/BuscarProducto');
 const buscarCategoria = require('./controllers/BuscarCategoria');
  
-
+ 
 // Llamando a Uploads y Cloudinary
 const upload = require('./controllers/ImageUploader/multer');
 const cloudinary = require('./controllers/ImageUploader/Cloudinary');
