@@ -2,7 +2,7 @@ const handleModificarProducto = (req, res, db) =>{
     const { id } = req.params;
      const { 
         categoria, nombre, descripcion,
-        disponibilidad, precio, modouso
+        disponibilidad, precio, modouso, codigo
         } = req.body;
 
                db('productos').where({ id: id }).update({     
