@@ -75,7 +75,7 @@ app.use('/agregar-producto', upload.array('image'), async(req, res) => {
 
   const { 
     categoria, nombre, descripcion,
-    precio, disponibilidad, modouso 
+    precio, disponibilidad, modouso, codigo 
       } = req.body;
 
   if (req.method === 'POST') {
@@ -101,6 +101,7 @@ app.use('/agregar-producto', upload.array('image'), async(req, res) => {
               nombre,
               descripcion,
               precio,
+              codigo,
               disponibilidad,
               modouso,    
               imagen: safeUrl   

@@ -10,6 +10,7 @@ const handleModificarProducto = (req, res, db) =>{
                 nombre,
                 descripcion,
                 modouso,
+                codigo,
                 precio,
                 disponibilidad
              }).then(res.status(200).json('producto actualizado'))
