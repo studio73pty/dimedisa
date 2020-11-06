@@ -173,6 +173,8 @@ app.use('/imagen-producto/:id', upload.array('image'), async(req, res) => {
 
 
 //  Endpoints de paypal
+let total = 0;
+
 app.post('/pay', async (req, res) =>{
     const reqQuery = { ...req.query };
    
@@ -182,20 +184,39 @@ app.post('/pay', async (req, res) =>{
    let productosArr = [];
    let cantidadArr = [];
 
+  
+
+   // Buscando los productos por ID en los parametros y colocandolos en un arreglo
+
+
    for(let i = 0; i < queryProd.length; i++){
      let producto = await db('productos').select().where({ id: queryProd[i] });
      productosArr.push(producto);
    }
-
+   // Colocando en un arreglo la cantidad de cada producto
    for(let i = 0; i < queryCant.length; i++){
-     cantidadArr.push(queryCant[i]);
+     cantidadArr.push(parseInt(queryCant[i],10));
    }
    
-   res.json(cantidadArr)
+   // Comprobando si hay la cantidad suficiente de productos disponibles
+   for(let i = 0; i < productosArr.length; i++){
+     if(productosArr[i][0].disponibilidad < cantidadArr[i]){
+       return res.json
+       (`no hay suficientes productos de ${productosArr[i][0].nombre}: ${productosArr[i][0].disponibilidad} y se han pedido: ${cantidadArr[i]}` 
+       )
+     }
+   }
 
+   // Calculando el monto total
+   for(let i = 0; i < productosArr.length; i++){
+     let precio = productosArr[i][0].precio
+     let cantidad = parseInt(cantidadArr[i], 10);
 
+     total = total + (precio * cantidad);
 
-/*
+   }
+   total = Math.round(total * 100) / 100;
+
   const create_payment_json = {
     "intent": "sale",
     "payer": {
@@ -207,21 +228,29 @@ app.post('/pay', async (req, res) =>{
     },
     "transactions": [{
         "item_list": {
-            "items": [{
-                "name": "Iphone X",
-                "sku": "001",
-                "price": "25.00",
-                "currency": "USD",
-                "quantity": 1
-            }]
+            "items": []
         },
         "amount": {
             "currency": "USD",
-            "total": "25.00"
+            "total": "0"
         },
         "description": "Iphone X prueba cliente"
     }]
 };
+
+//  Agregando los productos con sus cantidades a create_payment_json
+  for(let i = 0; i < productosArr.length; i++){
+    let obj = new Object();
+    obj.name = productosArr[i][0].nombre;
+    obj.sku = productosArr[i][0].id;
+    obj.price = productosArr[i][0].precio;
+    obj.quantity = cantidadArr[i];
+    obj.currency = "USD";
+    create_payment_json.transactions[0].item_list.items.push(obj)
+  }
+
+  create_payment_json.transactions[0].amount.total = total;
+
 
 paypal.payment.create(create_payment_json, function (error, payment) {
   if (error) {
@@ -234,7 +263,7 @@ paypal.payment.create(create_payment_json, function (error, payment) {
       }
   }
 });
-*/
+
 })
 
 app.get('/success', (req, res) => {
@@ -246,23 +275,29 @@ app.get('/success', (req, res) => {
       "transactions": [{
           "amount": {
               "currency": "USD",
-              "total": "25.00"
+              "total": "0"
           }
       }]
     };
 
+    execute_payment_json.transactions[0].amount.total = total;
+
     paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
       if (error) {
-          console.log(error.response);
+          console.log(error.response.details);
           throw error;
       } else {
-          console.log(JSON.stringify(payment));
-          res.send('Success');
+        res.json({
+          success: true,
+          data: payment
+        })
       }
   });
   });
 
-app.get('/cancel', (req, res) => res.send('Cancelled'));
+app.get('/cancel', (req, res) => {
+  res.status(200).json('cancelado')
+});
 
 
 const port = process.env.PORT || 3000;
