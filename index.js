@@ -289,11 +289,20 @@ app.get('/success', (req, res) => {
       } else {
         res.json({
           success: true,
-          data: payment
+          data: paymentId
         })
-      }
+      }/*
+       db('compras').insert({
+        idCompra: paymentId,
+        nombreComprador: `${payer_info.first_name}  ${payer_info.last_name}`,
+        correo: payer_info.email,
+        direccionEnvio:  `${payer_info.shipping_address.line1}, ${payer_info.shipping_address.cyity}, ${payer_info.shipping_address.state}, Codigo postal: ${payer_info.shipping_address.postal_code}, ${payer_info.shipping_address.country_code}`,
+        montoCompra: payment.transactions[0].amount.total
+      })
+    */
   });
   });
+
 
 app.get('/cancel', (req, res) => {
   res.status(200).json('cancelado')
