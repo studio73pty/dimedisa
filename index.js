@@ -7,6 +7,8 @@ require('dotenv').config();
 const knex = require('knex');
 const bcrypt = require('bcrypt-nodejs');
 const paypal = require('paypal-rest-sdk');
+const axios = require('axios');
+const colors = require('colors');
 
 
 
@@ -232,7 +234,7 @@ app.post('/pay', async (req, res) =>{
         },
         "amount": {
             "currency": "USD",
-            "total": "0"
+            
         },
         "description": "Iphone X prueba cliente"
     }]
@@ -254,6 +256,7 @@ app.post('/pay', async (req, res) =>{
 
 paypal.payment.create(create_payment_json, function (error, payment) {
   if (error) {
+    console.log(error.response.details)
       throw error;
   } else {
       for(let i = 0; i < payment.links.length; i++){
@@ -266,31 +269,78 @@ paypal.payment.create(create_payment_json, function (error, payment) {
 
 })
 
-app.get('/success', (req, res) => {
+app.get('/success', async (req, res) => {
   const payerId = req.query.PayerID;
   const paymentId = req.query.paymentId;
+
 
   const execute_payment_json = {
       "payer_id": payerId,
       "transactions": [{
           "amount": {
               "currency": "USD",
-              "total": "0"
+              
           }
       }]
     };
 
     execute_payment_json.transactions[0].amount.total = total;
 
-    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+    paypal.payment.execute(paymentId, execute_payment_json, async function  (error, payment) {
+      
       if (error) {
           console.log(error.response.details);
           throw error;
       } else {
-        res.json({
-          success: true,
-          data: paymentId
-        })
+        //  Buscando las credenciales para solicitar la informacion de la compra
+        let token1 = '';
+        let payID = paymentId;
+        (async () => {
+          try {
+            const { data: { access_token } } = await axios({
+              url: 'https://api.sandbox.paypal.com/v1/oauth2/token',
+              method: 'post',
+              headers: {
+                Accept: 'application/json',
+                'Accept-Language': 'en_US',
+                'content-type': 'application/x-www-form-urlencoded',
+              },
+              auth: {
+                username: process.env.CLIENT_ID,
+                password: process.env.CLIENT_SECRET,
+              },
+              params: {
+                grant_type: 'client_credentials',
+              },
+            });
+            
+            
+
+            const payment1 = await axios({
+              url: `https://api-m.sandbox.paypal.com/v1/payments/payment/${payID}`,
+              method: 'get',
+              headers: {
+                Authorization: `Bearer ${access_token}`,
+              }
+            }); 
+           // console.log(payment1.data)
+
+
+           const compra = await db('compras').insert({
+              idCompra: payment1.data.id,
+            })
+
+            res.json({
+              success: true,
+              data: compra
+            })
+            return
+
+          } catch (error) {
+            console.error('error: ', error);
+          }
+        })();
+
       }/*
        db('compras').insert({
         idCompra: paymentId,
@@ -300,7 +350,9 @@ app.get('/success', (req, res) => {
         montoCompra: payment.transactions[0].amount.total
       })
     */
-  });
+
+
+    });
   });
 
 
@@ -309,7 +361,16 @@ app.get('/cancel', (req, res) => {
 });
 
 
+
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`I'm alive here ${port}`))
 
+
+// Gestionando unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.log(`ERROR: ${err.message}`.red.bgWhite)
+  // Cerrar el servidor y salir del proceso (que la app no corra)
+
+})
