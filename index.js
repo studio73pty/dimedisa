@@ -234,12 +234,12 @@ app.post('/pay', async (req, res) =>{
         },
         "amount": {
             "currency": "USD",
-            
+            "amount": `"${total}"`
         },
         "description": "Iphone X prueba cliente"
     }]
 };
-
+  console.log(`Monto antes del total: ${create_payment_json.transactions[0].amount.total}`)
 //  Agregando los productos con sus cantidades a create_payment_json
   for(let i = 0; i < productosArr.length; i++){
     let obj = new Object();
@@ -251,8 +251,9 @@ app.post('/pay', async (req, res) =>{
     create_payment_json.transactions[0].item_list.items.push(obj)
   }
 
-  create_payment_json.transactions[0].amount.total = total;
+  
 
+  console.log(`Monto despues del total: ${create_payment_json.transactions[0].amount.total}`)
 
 paypal.payment.create(create_payment_json, function (error, payment) {
   if (error) {
@@ -323,16 +324,18 @@ app.get('/success', async (req, res) => {
                 Authorization: `Bearer ${access_token}`,
               }
             }); 
+
+            const infoCompra = payment1.data;
            // console.log(payment1.data)
 
 
            const compra = await db('compras').insert({
-              idCompra: payment1.data.id,
+              idCompra: infoCompra.id,
             })
 
             res.json({
               success: true,
-              data: compra
+              data: infoCompra.data
             })
             return
 
