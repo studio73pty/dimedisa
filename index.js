@@ -6,13 +6,13 @@ const fs = require('fs');
 require('dotenv').config();
 const knex = require('knex');
 const bcrypt = require('bcrypt-nodejs');
-const paypal = require('paypal-rest-sdk');
+// const paypal = require('paypal-rest-sdk');
 const axios = require('axios');
 const colors = require('colors');
 
 
 
-// LLamando a los controladoresssss
+// LLamando a los controladores
 const home = require('./controllers/Home');
 const borrarProducto = require('./controllers/BorrarProducto');
 const modificarProducto = require('./controllers/ModificarProducto');
@@ -39,11 +39,11 @@ const db = knex({
     }
   });
 
-paypal.configure({
-  'mode': 'sandbox',
-  'client_id': process.env.CLIENT_ID,
-  'client_secret': process.env.CLIENT_SECRET
-})
+// paypal.configure({
+//   'mode': 'sandbox',
+//   'client_id': process.env.CLIENT_ID,
+//   'client_secret': process.env.CLIENT_SECRET
+// })
 
 const app = express();
 
@@ -255,18 +255,18 @@ app.post('/pay', async (req, res) =>{
 
   console.log(`Monto despues del total: ${create_payment_json.transactions[0].amount.total}`)
 
-paypal.payment.create(create_payment_json, function (error, payment) {
-  if (error) {
-    console.log(error.response.details)
-      throw error;
-  } else {
-      for(let i = 0; i < payment.links.length; i++){
-          if(payment.links[i].rel == 'approval_url'){
-              res.send(payment.links[i].href)
-          }
-      }
-  }
-});
+// paypal.payment.create(create_payment_json, function (error, payment) {
+//   if (error) {
+//     console.log(error.response.details)
+//       throw error;
+//   } else {
+//       for(let i = 0; i < payment.links.length; i++){
+//           if(payment.links[i].rel == 'approval_url'){
+//               res.send(payment.links[i].href)
+//           }
+//       }
+//   }
+// });
 
 })
 
@@ -287,7 +287,7 @@ app.get('/success', async (req, res) => {
 
     execute_payment_json.transactions[0].amount.total = total;
 
-    paypal.payment.execute(paymentId, execute_payment_json, async function  (error, payment) {
+   /* paypal.payment.execute(paymentId, execute_payment_json, async function  (error, payment) {
       
       if (error) {
           console.log(error.response.details);
@@ -344,7 +344,8 @@ app.get('/success', async (req, res) => {
           }
         })();
 
-      }/*
+      }
+
        db('compras').insert({
         idCompra: paymentId,
         nombreComprador: `${payer_info.first_name}  ${payer_info.last_name}`,
@@ -352,10 +353,11 @@ app.get('/success', async (req, res) => {
         direccionEnvio:  `${payer_info.shipping_address.line1}, ${payer_info.shipping_address.cyity}, ${payer_info.shipping_address.state}, Codigo postal: ${payer_info.shipping_address.postal_code}, ${payer_info.shipping_address.country_code}`,
         montoCompra: payment.transactions[0].amount.total
       })
-    */
+    
 
 
     });
+    */
   });
 
 
